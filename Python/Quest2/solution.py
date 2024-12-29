@@ -3,86 +3,100 @@ input = open("input.txt").read().strip()
 input2 = open("input2.txt").read().strip()
 input3 = open("input3.txt").read().strip()
 
-P = {
-    'A': 0,
-    'B': 1,
-    'C': 3,
-    'D': 5,
-}
+words = []
+sentence = ""
+sentences = []
 
-N = {
-    0: 0,
-    1: 0,
-    2: 2,
-    3: 6,
-}
+def parse_input(input):
+    global words, sentence
+    words = []
+    sentence = ""
+    sentences = []
 
-W = []
-S = []
+    lines = input.splitlines()
+    words = lines[0].split(":")[1].split(",")
+    sentence = lines[2]
 
-def parse_input(input: str):
-    global W, S
-    W = input.split("\n")[0].strip().split(":")[1].split(",")
-    S = [s.strip() for s in input.split("\n")[2:]]
+def parse_input2(input):
+    global words, sentences
+    words = []
+    sentence = ""
+    sentences = []
 
-def part1(input: str) -> int:
+    lines = input.splitlines()
+    words = lines[0].split(":")[1].split(",")
+
+    for sentence in lines[2:]:
+        sentences.append(sentence)
+
+def part1(input):
     parse_input(input)
 
+    return check()
+
+def check():
     total = 0
 
-    for w in W:
-        parts = len(S[0].split(w))
-        total += parts - 1
+    for word in words:
+        for i in range(len(sentence) - len(word)):
+            part = sentence[i:i+len(word)]
+            if word == part:
+                total += 1
 
     return total
 
+def part2(input):
+    parse_input2(input)
 
-def part2(input: str) -> int:
-    parse_input(input)
+    return check2()
 
-    symbols: set[tuple[int, int, str]] = set()
+def check2():
+    found = set()
 
-    for w in W + [t[::-1] for t in W]:
-        for t, s in enumerate(S):
-            symbols = symbols.union(check(-1, t, s, w, False))
+    for s, sen in list(enumerate(sentences)):
+        for word in words + [w[::-1] for w in words]:
+            for i in range(len(sen) - len(word) + 1):
+                part = sen[i:i+len(word)]
+                if word == part:
+                    for j in range(len(word)):
+                        found.add((s, i + j))
 
-    return len(symbols)
+    return len(found)
 
-def part3(input: str) -> int:
-    parse_input(input)
+def part3(input):
+    parse_input2(input)
 
-    symbols: set[tuple[int, int, str]] = set()
+    return check3()
 
-    for w in W + [t[::-1] for t in W]:
-        # Horizontal sentences
-        for t, s in enumerate(S):
-            symbols = symbols.union(check(-1, t, s, w, True))
+def check3():
+    found = set()
 
-        # Vertical sentences
-        v_sentences = ["".join(S[x][s] for x in range(len(S))) for s in range(len(S[0]))]
-        print(w, v_sentences)
-        for t, s in enumerate(v_sentences):
-            symbols = symbols.union(check(t, -1, s, w, True))
+    for s, sen in list(enumerate(sentences)):
+        for word in words + [w[::-1] for w in words]:
+            for i in range(len(sen)):
+                left = i
+                right = (i + len(word)) % len(sen)
+                part = ""
 
-    return len(symbols)
-
-def check(h_index: int, v_index: int, sentence: str, runic_word: str, p3: bool) -> set[tuple[int, int, str]]:
-    symbols = set()
-    r = len(sentence) + len(runic_word) if p3 else len(sentence)
-
-    for i in range(r):
-        if i >= len(sentence):
-            syms = sentence[i:] + sentence[:(i + len(runic_word)) % len(sentence) + 1]
-        else:
-            syms = sentence[i:i+len(runic_word)]
-        if "".join(syms) == runic_word:
-            for j, sym in enumerate(syms):
-                if h_index == -1:
-                    symbols.add((v_index, (i % len(sentence)) + j, sym))
+                if right < left:
+                    part = sen[left:] + sen[:right]
                 else:
-                    symbols.add(((i % len(sentence)) + j, h_index, sym))
+                    part = sen[left:right]
 
-    return symbols
+                if word == part:
+                    for j in range(len(word)):
+                        found.add((s, (i + j) % len(sen)))
+
+
+    for s, sen in enumerate(list("".join(x) for x in list(zip(*sentences)))):
+        for word in words + [w[::-1] for w in words]:
+            for i in range(len(sen) - len(word) + 1):
+                part = sen[i:i + len(word)]
+                if word == part:
+                    for j in range(len(word)):
+                        found.add((i + j, s))
+
+    return len(found)
 
 if __name__ == "__main__":
     print("Part 1:", part1(input))
