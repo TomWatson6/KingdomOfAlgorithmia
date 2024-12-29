@@ -16,11 +16,10 @@ def part2(input: str) -> int:
     return sum(n - smallest for n in nums)
 
 def part3(input: str) -> int:
-    nums = [int(x.strip()) for x in input.split("\n")]
-    mean = float(sum(nums)) / len(nums)
-    mean = int(mean + 1.5)
+    nums = sorted([int(x.strip()) for x in input.splitlines()])
+    median = nums[len(nums) // 2]
 
-    return sum(abs(n - mean) for n in nums)
+    return sum(abs(n - median) for n in nums)
 
 if __name__ == "__main__":
     print("Part 1:", part1(input))
